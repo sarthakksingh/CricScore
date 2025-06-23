@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">CricScore</string>
+    <array name="com_google_android_gms_fonts_certs">
+        <item>@array/certs</item>
+    </array>
+
+    <array name="certs">
+        <item>MIIBIjANBgkq...</item>
+    </array>
+</resources>
