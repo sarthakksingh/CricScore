@@ -1,25 +1,50 @@
 package com.example.cricscore.view.screens
 
-import android.app.AlertDialog
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -27,7 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.cricscore.R
 
-// --- Data Classes for Undo/Redo ---
+
 data class MatchStateSnapshot(
     val runs: Int,
     val wickets: Int,
@@ -39,7 +64,8 @@ data class MatchStateSnapshot(
     val perBallCopy: List<String>
 )
 
-// --- Main Scoring Screen ---
+
+@SuppressLint("DefaultLocale")
 @Composable
 fun ScoringScreen(
     teamName: String = "Team A",
@@ -47,29 +73,29 @@ fun ScoringScreen(
     player1: String = "Player 1",
     player2: String = "Player 2"
 ) {
-    // --- State Variables ---
-    var runs by remember { mutableStateOf(0) }
-    var wickets by remember { mutableStateOf(0) }
-    var currentOver by remember { mutableStateOf(0) }
-    var currentBall by remember { mutableStateOf(0) }
+
+    var runs by remember { mutableIntStateOf(0) }
+    var wickets by remember { mutableIntStateOf(0) }
+    var currentOver by remember { mutableIntStateOf(0) }
+    var currentBall by remember { mutableIntStateOf(0) }
     var strikerName by remember { mutableStateOf(player1) }
     var nonStrikerName by remember { mutableStateOf(player2) }
-    var strikerRuns by remember { mutableStateOf(0) }
-    var strikerBalls by remember { mutableStateOf(0) }
-    var nonStrikerRuns by remember { mutableStateOf(0) }
-    var nonStrikerBalls by remember { mutableStateOf(0) }
+    var strikerRuns by remember { mutableIntStateOf(0) }
+    var strikerBalls by remember { mutableIntStateOf(0) }
+    var nonStrikerRuns by remember { mutableIntStateOf(0) }
+    var nonStrikerBalls by remember { mutableIntStateOf(0) }
     var isStrikerOnStrike by remember { mutableStateOf(true) }
     var perBallResults = remember { mutableStateListOf<String>() }
     var overBallHistory = remember { mutableStateListOf<List<String>>() }
     var previousStates = remember { mutableStateListOf<MatchStateSnapshot>() }
 
-    // Dialog State
+
     var wicketTypeDialog by remember { mutableStateOf(false) }
     var runOutDialog by remember { mutableStateOf(false) }
     var newBatsmanDialog by remember { mutableStateOf(false) }
     var newBatsmanCallback by remember { mutableStateOf<(String) -> Unit>({}) }
 
-    // --- Utility Functions ---
+
     fun saveState() {
         previousStates.add(
             MatchStateSnapshot(
@@ -101,8 +127,11 @@ fun ScoringScreen(
         }
     }
 
+
     fun incrementBall() {
-        if (perBallResults.lastOrNull() !in listOf("Wd", "Nb")) {
+        val last = perBallResults.lastOrNull() ?: ""
+        val isLegal = last !in listOf("Wd", "Nb")
+        if (isLegal) {
             currentBall++
             if (currentBall == 6) {
                 currentOver++
@@ -122,25 +151,26 @@ fun ScoringScreen(
     fun handleWicket(outType: String) {
         wickets += 1
         perBallResults.add(outType)
-        if (outType != "Run Out") {
-            if (isStrikerOnStrike) {
-                strikerBalls++
-                askNewBatsman { newName ->
-                    strikerName = newName
-                    strikerRuns = 0
-                    strikerBalls = 0
-                }
-            } else {
-                nonStrikerBalls++
-                askNewBatsman { newName ->
-                    nonStrikerName = newName
-                    nonStrikerRuns = 0
-                    nonStrikerBalls = 0
-                }
+        if (isStrikerOnStrike) {
+            strikerBalls++
+            askNewBatsman { newName ->
+                strikerName = newName
+                strikerRuns = 0
+                strikerBalls = 0
+                isStrikerOnStrike = true
             }
-            incrementBall()
+        } else {
+            nonStrikerBalls++
+            askNewBatsman { newName ->
+                nonStrikerName = newName
+                nonStrikerRuns = 0
+                nonStrikerBalls = 0
+                isStrikerOnStrike = false
+            }
         }
+        incrementBall()
     }
+
 
     fun handleRunOut(
         run: Int,
@@ -151,6 +181,7 @@ fun ScoringScreen(
         wickets += 1
         runs += run
         perBallResults.add("Run Out")
+
         if (outPlayer == strikerName) {
             strikerRuns += run
             strikerBalls++
@@ -164,6 +195,7 @@ fun ScoringScreen(
             nonStrikerRuns = 0
             nonStrikerBalls = 0
         }
+
         isStrikerOnStrike = strikerNow
         incrementBall()
     }
@@ -197,7 +229,8 @@ fun ScoringScreen(
         }
     }
 
-    // --- Main UI ---
+
+
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
             painter = painterResource(id = R.drawable.playing_cricket),
@@ -205,17 +238,28 @@ fun ScoringScreen(
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize().alpha(0.6f)
         )
+        Text(
+            text = "Live ScoreBoard",
+            color = Color.Black,
+            fontWeight = FontWeight.Bold,
+            fontSize = 18.sp,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(start = 26.dp, top = 30.dp)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
+
         ) {
-            Text("Live Scoreboard", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(16.dp))
-            // Score Summary Card
+
+
             ScoreSummaryCard(
                 teamName = "$teamName Batting",
                 runs = runs,
@@ -229,7 +273,8 @@ fun ScoringScreen(
             BattingStatCard(name = strikerName, runs = strikerRuns, balls = strikerBalls, isOnStrike = isStrikerOnStrike)
             BattingStatCard(name = nonStrikerName, runs = nonStrikerRuns, balls = nonStrikerBalls, isOnStrike = !isStrikerOnStrike)
             Spacer(modifier = Modifier.height(16.dp))
-            Text("Per Ball Result", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+            Text("This Over", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -286,7 +331,7 @@ fun ScoringScreen(
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
                     modifier = Modifier.weight(1f)
                 ) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Undo", tint = Color.White)
+                    Icon(Icons.AutoMirrored.Default.ArrowBack, contentDescription = "Undo", tint = Color.White)
                     Spacer(modifier = Modifier.width(4.dp))
                     Text("Undo", color = Color.White)
                 }
@@ -304,7 +349,7 @@ fun ScoringScreen(
             Spacer(modifier = Modifier.height(32.dp))
         }
 
-        // --- Dialogs ---
+
         if (wicketTypeDialog) {
             WicketDialog(
                 onDismiss = { wicketTypeDialog = false },
@@ -339,7 +384,7 @@ fun ScoringScreen(
     }
 }
 
-// --- Dialogs and Cards ---
+
 @Composable
 fun WicketDialog(
     onDismiss: () -> Unit,
@@ -450,25 +495,25 @@ fun NewBatsmanDialog(
     )
 }
 
-// --- Dummy Cards (Replace with your own implementations) ---
+
 @Composable
 fun ScoreSummaryCard(
     teamName: String,
     runs: Int,
     wickets: Int,
-    overText: String, // e.g., "3.2"
-    runRate: String,  // e.g., "6.75"
+    overText: String,
+    runRate: String,
     totalOvers: Int
 ) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(120.dp)
+            .height(160.dp)
             .padding(8.dp)
             .clip(RoundedCornerShape(18.dp))
-            .background(Color(0xFFFFFFF).copy(alpha = 0.65f)) // semi-transparent dark
+            .background(Color(0xFFFFFFFF).copy(alpha = 0.65f))
     ) {
-        // Team Name (Top Left)
+
         Text(
             text = teamName,
             color = Color.Black,
@@ -479,7 +524,7 @@ fun ScoreSummaryCard(
                 .padding(start = 16.dp, top = 12.dp)
         )
 
-        // Runs/Wickets (Left, below team name)
+
         Column(
             modifier = Modifier
                 .align(Alignment.CenterStart)
@@ -489,24 +534,18 @@ fun ScoreSummaryCard(
                 text = "$runs/$wickets",
                 color = Color.Black,
                 fontWeight = FontWeight.ExtraBold,
-                fontSize = 36.sp
+                fontSize = 32.sp
             )
+
+
+            Text(
+                text = "RR: $runRate",
+                color = Color.Black,
+                fontWeight = FontWeight.Medium,
+                fontSize = 15.sp,
+
+                )
         }
-
-        Spacer(modifier = Modifier.height(55.dp))
-
-
-        // Run Rate (Bottom Left)
-        Text(
-            text = "RR: $runRate",
-            color = Color.Black,
-            fontWeight = FontWeight.Medium,
-            fontSize = 16.sp,
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(start = 16.dp, bottom = 12.dp)
-        )
-
         Text(
             text = "$overText/$totalOvers",
             color = Color.Black,
@@ -551,6 +590,6 @@ fun BattingStatCard(
 @Composable
 fun ScoringScreenPreview() {
     MaterialTheme {
-       ScoringScreen()
+        ScoringScreen()
     }
 }
