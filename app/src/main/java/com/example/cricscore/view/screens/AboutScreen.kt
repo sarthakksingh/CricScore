@@ -3,8 +3,10 @@ package com.example.cricscore.view.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -30,6 +32,7 @@ fun AboutScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
+            .verticalScroll(rememberScrollState())
             .background(MaterialTheme.colorScheme.background),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -56,13 +59,13 @@ fun AboutScreen(
         DeveloperCard(
             name = "Sarthak Singh",
             role = "Co‑Creator • B.Tech CSE (KIIT, Bhubaneswar)",
-            imgRes = R.drawable.summary_banner      // put real resource
+            imgRes = R.drawable.summary_banner
         )
         Spacer(Modifier.height(16.dp))
         DeveloperCard(
             name = "Harsh Singh",
             role = "Co‑Creator • B.Tech CSE (KIIT, Bhubaneswar)",
-            imgRes = R.drawable.summary_banner        // put real resource
+            imgRes = R.drawable.summary_banner
         )
     }
 }
@@ -97,12 +100,25 @@ private fun DeveloperCard(name: String, role: String, imgRes: Int) {
     }
 }
 
+
 private fun defaultDescription() = """
-CricScore is a lightweight yet powerful cricket‑scoring companion built with Jetpack Compose. 
-It lets you set up matches in seconds, record every ball offline, generate instant PDF 
-scorecards, and keep a searchable history of your games. Designed by cricket enthusiasts 
-for clubs, college teams and backyard battles alike.
+CricScore is a lightweight, offline‑ready cricket‑scoring app built 100 % with Jetpack Compose.
+
+• 🏏  Ultra‑fast match setup for any limited‑overs format  
+• ✍️  One‑tap logging for dot, runs, wides, no‑balls, wickets & run‑outs  
+• 🔀  Automatic strike rotation & over progression  
+• 👤  Per‑player stats: live runs, balls, strike indicator and dismissal type  
+• 📈  Over‑wise breakdown: see every ball in each over, reset every six legal deliveries  
+• 📊  Real‑time run‑rate, total runs/wickets, current overs & required run‑rate  
+• ⬅️  Robust UNDO — even across over resets and wicket events  
+• 📝  Instant PDF scorecards (match summary + per‑over log) shareable via WhatsApp, Mail, Drive  
+• 🗂️  Match history stored locally with Room DB — revisit any game, anytime   
+• 🚀  All features fully offline; no account or data connection required
+
+Designed by cricket lovers for campus tournaments, club fixtures and backyard battles alike —  
+CricScore keeps every delivery at your fingertips so you can focus on the game.
 """.trimIndent()
+
 
 @Preview(showBackground = true)
 @Composable
