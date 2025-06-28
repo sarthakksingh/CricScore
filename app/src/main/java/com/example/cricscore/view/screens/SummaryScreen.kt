@@ -69,7 +69,7 @@ fun MatchSummaryScreen(
             painter = painterResource(backgroundRes),
             contentDescription = null,
             contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize().alpha(0.4f)
+            modifier = Modifier.fillMaxSize().alpha(0.55f)
         )
 
         Column(

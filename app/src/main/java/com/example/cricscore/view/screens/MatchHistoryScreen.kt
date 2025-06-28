@@ -39,7 +39,7 @@ fun HistoryScreen(
             painter = painterResource(backgroundRes),
             contentDescription = null,
             contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize().alpha(0.35f)
+            modifier = Modifier.fillMaxSize().alpha(0.55f)
         )
         Column(
             modifier = Modifier
@@ -75,8 +75,9 @@ private fun MatchCard(
         modifier = Modifier
             .fillMaxWidth()
             .height(140.dp)
-            .clickable { onClick(record) },
-        colors = CardDefaults.cardColors(containerColor = Color.White) // Transparent card[2]
+            .clickable { onClick(record) }
+            .alpha(.95f),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Box(Modifier.fillMaxSize()) {
             Column(
@@ -138,7 +139,7 @@ fun HistoryScreenPreview() {
         completed = true
     )
 
-    val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+    val today = SimpleDateFormat("dd-MM-yyyy", Locale.US).format(Date())
 
     // Use remember for mutable state in preview to simulate deletion
     var matches by remember {
