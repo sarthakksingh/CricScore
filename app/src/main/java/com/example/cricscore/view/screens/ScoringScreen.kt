@@ -20,12 +20,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -187,19 +183,17 @@ fun ScoringScreen(
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
                     modifier = Modifier.weight(1f)
                 ) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Undo", tint = Color.White)
                     Spacer(modifier = Modifier.width(4.dp))
                     Text("Undo", color = Color.White)
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 Button(
-                    onClick = { /* End Inning Logic */ },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Gray),
+                    onClick = { /* TODO */ },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceTint),
                     modifier = Modifier.weight(1f)
                 ) {
-                    Icon(Icons.Filled.CheckCircle, contentDescription = "End", tint = Color.White)
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("End Inning", color = Color.White)
+                    Text("Score Card", color = Color.White)
                 }
             }
 

@@ -68,8 +68,8 @@ fun ScoreSummaryCard(
                 )
         }
         Text(
-            text = "$overText/$totalOvers",
-            color = Color.Gray,
+            text = "($overText/$totalOvers ov)",
+            color = Color.DarkGray,
             fontWeight = FontWeight.SemiBold,
             fontSize = 16.sp,
             modifier = Modifier

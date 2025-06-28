@@ -215,7 +215,7 @@ fun MatchSetupScreen() {
 
             Button(
                 onClick = { /*TODO*/},
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF007F0E)),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00472F)),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
