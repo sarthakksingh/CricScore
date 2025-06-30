@@ -5,7 +5,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.navigation.compose.rememberNavController
-import com.example.cricscore.navigation.NavGraph
+import com.example.cricscore.navigation.AppNavHost
+//import com.example.cricscore.navigation.NavGraph
 import com.example.cricscore.ui.theme.CricScoreTheme
 
 class MainActivity : ComponentActivity() {
@@ -14,7 +15,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             CricScoreTheme {
                 val navController = rememberNavController()
-                NavGraph(navController = navController)
+                AppNavHost(navController)
             }
         }
     }
