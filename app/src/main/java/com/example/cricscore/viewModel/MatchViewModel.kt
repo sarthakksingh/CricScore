@@ -13,6 +13,15 @@ enum class MatchPhase { FIRST, SECOND, COMPLETE }
 
 class MatchViewModel : ViewModel() {
 
+    // --- Setup‑screen inputs ---
+    var totalOvers by mutableIntStateOf(0)
+    var numPlayersPerTeam by mutableIntStateOf(11)
+    var teamAName by mutableStateOf("Team A")
+    var teamBName by mutableStateOf("Team B")
+    var strikerName by mutableStateOf("")
+    var nonStrikerName by mutableStateOf("")
+
+
     // Match phase (controls innings progression)
     var phase by mutableStateOf(MatchPhase.FIRST)
 
