@@ -24,11 +24,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.cricscore.R
 
 
 @Composable
-fun MatchSetupScreen() {
+fun MatchSetupScreen(navController: NavController) {
     var overs by remember { mutableStateOf("") }
     var team1 by remember { mutableStateOf("") }
     var team2 by remember { mutableStateOf("") }
@@ -214,7 +215,9 @@ fun MatchSetupScreen() {
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { /*TODO*/},
+                onClick = {
+                    navController.navigate("scoring")
+                },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00472F)),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -261,7 +264,9 @@ fun TransparentPanel(content: @Composable ColumnScope.() -> Unit) {
 @Composable
 fun MatchSetupScreenPreview() {
     MaterialTheme {
-        MatchSetupScreen()
+        MatchSetupScreen(
+            navController = TODO()
+        )
     }
 }
 

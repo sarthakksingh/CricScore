@@ -23,82 +23,77 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.cricscore.R
 import com.example.cricscore.ui.theme.CricScoreTheme
 
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(navController: NavController) {
     CricScoreTheme {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(color = Color(0xFFDCFFB3)),
-        verticalArrangement = Arrangement.SpaceBetween,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-
-        Image(
-            painter = painterResource(id = R.drawable.cricket_banner),
-            contentDescription = "Cricket Ground",
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(250.dp),
-            contentScale = ContentScale.Crop
-        )
-
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            modifier = Modifier
+                .fillMaxSize()
+                .background(color = Color(0xFFDCFFB3)),
+            verticalArrangement = Arrangement.SpaceBetween,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = "Welcome to CricScore",
-                style = MaterialTheme.typography.headlineMedium .copy(
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.surfaceTint
-                ),
-                modifier = Modifier.padding(bottom = 35.dp)
+
+            Image(
+                painter = painterResource(id = R.drawable.cricket_banner),
+                contentDescription = "Cricket Ground",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(250.dp),
+                contentScale = ContentScale.Crop
             )
 
-            Button(
-                onClick = { /* TODO */ },
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                shape = RoundedCornerShape(50),
-                modifier = Modifier
-                    .fillMaxWidth(0.8f)
-                    .height(50.dp)
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                Text(text = "Start New Match", color = Color.White)
+                Text(
+                    text = "Welcome to CricScore",
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.surfaceTint
+                    ),
+                    modifier = Modifier.padding(bottom = 35.dp)
+                )
+
+                // 🏏 Start Match Button -> matchSetup
+                Button(
+                    onClick = { navController.navigate("matchSetup") },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                    shape = RoundedCornerShape(50),
+                    modifier = Modifier
+                        .fillMaxWidth(0.8f)
+                        .height(50.dp)
+                ) {
+                    Text(text = "Start New Match", color = Color.White)
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+
+                Button(
+                    onClick = { navController.navigate("matchHistory") },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceTint),
+                    shape = RoundedCornerShape(50),
+                    modifier = Modifier
+                        .fillMaxWidth(0.8f)
+                        .height(50.dp)
+                ) {
+                    Text(text = "View Match History", color = Color.White)
+                }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Button(
-                onClick = { /* TODO */ },
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceTint),
-                shape = RoundedCornerShape(50),
-                modifier = Modifier
-                    .fillMaxWidth(0.8f)
-                    .height(50.dp)
-            ) {
-                Text(text = "View Match History", color = Color.White)
-            }
+            Text(
+                text = "Offline & Easy Scoring",
+                style = MaterialTheme.typography.labelLarge,
+                color = Color(0xFF2E7D32),
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
         }
-
-        Text(
-            text = "Offline & Easy Scoring",
-            style = MaterialTheme.typography.labelLarge,
-            color = Color(0xFF2E7D32),
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-    }
- }
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun HomeScreenPreview() {
-    MaterialTheme {
-        HomeScreen()
     }
 }

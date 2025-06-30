@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.cricscore"
-        minSdk = 26
+        minSdk = 35
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -55,6 +55,8 @@ dependencies {
     implementation(libs.androidx.ui.text.google.fonts)
     implementation(libs.play.services.base)
     implementation(libs.androidx.ui.text.google.fonts.v167)
+    implementation (libs.androidx.navigation.compose)
+
     coreLibraryDesugaring (libs.desugar.jdk.libs)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

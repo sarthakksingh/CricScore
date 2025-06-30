@@ -1,6 +1,7 @@
 package com.example.cricscore.view.utils
 
-import com.example.cricscore.view.screens.InningsSummary
+import com.example.cricscore.model.InningsSummary
+
 
 fun InningsSummary.toShareText(): String {
     val header = "$teamName  –  $totalRuns/$totalWkts  in  $oversBowled overs  (RR $runRate)"
