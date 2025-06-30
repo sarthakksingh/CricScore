@@ -1,9 +1,7 @@
 package com.example.cricscore.model
 
-import com.example.cricscore.view.screens.InningsSummary
-import com.example.cricscore.view.screens.PlayerStats
+import com.example.cricscore.model.data.PlayerStats
 
-data class PlayerStats(val name: String, val runs: Int, val balls: Int, val isOut: Boolean)
 
 data class OverBreakdown(val overNumber: Int, val runs: Int, val wickets: Int, val perBall: List<String>)
 
@@ -15,7 +13,7 @@ data class InningsSummary(
     val oversBowled: String,
     val runRate: String,
     val players: List<PlayerStats>,
-    val overs: List<OverBreakdown>,
+    val overs: List<List<String>>,
     val completed: Boolean
 )
 
