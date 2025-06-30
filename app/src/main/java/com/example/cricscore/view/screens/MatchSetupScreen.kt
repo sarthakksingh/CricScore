@@ -24,12 +24,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import com.example.cricscore.R
+import com.example.cricscore.viewModel.MatchPhase
+import com.example.cricscore.viewModel.MatchViewModel
 
 
 @Composable
-fun MatchSetupScreen(navController: NavController) {
+fun MatchSetupScreen(
+    navController: NavHostController,
+    matchViewModel: MatchViewModel = viewModel()
+) {
     var overs by remember { mutableStateOf("") }
     var team1 by remember { mutableStateOf("") }
     var team2 by remember { mutableStateOf("") }
@@ -216,15 +223,36 @@ fun MatchSetupScreen(navController: NavController) {
 
             Button(
                 onClick = {
+                    /* ---------- 1.  Basic validation / fall‑backs ---------- */
+                    val inputOvers       = overs.toIntOrNull()?.coerceAtLeast(1) ?: 1
+                    val inputTeamA       = team1.ifBlank { "Team A" }
+                    val inputTeamB       = team2.ifBlank { "Team B" }
+                    val inputBattingTeam = battingFirst.ifBlank { inputTeamA }
+                    val inputStriker     = striker.ifBlank   { "Striker" }
+                    val inputNonStriker  = nonStriker.ifBlank{ "Non‑Striker" }
+                    val inputPlayers     = numPlayers.toIntOrNull()?.coerceIn(2, 15) ?: 11
+
+                    /* ---------- 2.  Push into the ViewModel ---------- */
+                    matchViewModel.apply {
+                        totalOvers        = inputOvers
+                        numPlayersPerTeam = inputPlayers
+                        teamAName         = inputTeamA
+                        teamBName         = inputTeamB
+                        battingTeam       = inputBattingTeam        // “Team A” or “Team B”
+                        strikerName       = inputStriker
+                        nonStrikerName    = inputNonStriker
+                        phase             = MatchPhase.FIRST
+                        targetScore       = 0                       // reset
+                    }
+
+                    /* ---------- 3.  Navigate to scoring ---------- */
                     navController.navigate("scoring")
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00472F)),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
+                colors   = ButtonDefaults.buttonColors(containerColor = Color(0xFF00472F)),
+                modifier = Modifier.fillMaxWidth().height(50.dp)
             ) {
                 Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.White)
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(Modifier.width(8.dp))
                 Text("Start Match", color = Color.White, fontWeight = FontWeight.Bold)
             }
         }
