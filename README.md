@@ -55,7 +55,7 @@
 
 1. Clone the repo:
    ```bash
-   
+   https://github.com/sarthakksingh/CricScore.git
    ```
 
 2. Open the project in **Android Studio ** .
