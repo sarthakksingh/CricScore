@@ -1,15 +1,38 @@
 package com.example.cricscore.view.screens
 
 import android.annotation.SuppressLint
-import androidx.compose.foundation.*
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -23,8 +46,11 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.cricscore.R
-import com.example.cricscore.model.MatchState
-import com.example.cricscore.view.components.*
+import com.example.cricscore.view.components.BattingStatCard
+import com.example.cricscore.view.components.NewBatsmanDialog
+import com.example.cricscore.view.components.RunOutDialog
+import com.example.cricscore.view.components.ScoreSummaryCard
+import com.example.cricscore.view.components.WicketDialog
 import com.example.cricscore.viewModel.MatchPhase
 import com.example.cricscore.viewModel.MatchViewModel
 
@@ -34,41 +60,31 @@ fun ScoringScreen(
     navController: NavHostController,
     matchViewModel: MatchViewModel = viewModel()
 ) {
-    /* ----------------------------------------------------------------
-       Pull real user inputs from MatchViewModel (set in MatchSetupScreen)
-    ------------------------------------------------------------------*/
+
     val totalOvers       = matchViewModel.totalOvers
     val strikerInit      = matchViewModel.strikerName
     val nonStrikerInit   = matchViewModel.nonStrikerName
-    val battingTeamLabel = matchViewModel.battingTeam   // "Team A" / "Team B"
+    val battingTeamLabel = matchViewModel.battingTeam
 
-    /* ----------------------------------------------------------------
-       Create MatchState (remember so it survives recomposition)
-    ------------------------------------------------------------------*/
-    val matchState = remember {
-        MatchState(
-            totalOvers = totalOvers,
-            striker = strikerInit,
-            nonStriker = nonStrikerInit
-        )
+
+    matchViewModel.initMatchState(totalOvers, strikerInit, nonStrikerInit)
+    val matchState = matchViewModel.matchState!!
+    LaunchedEffect(matchState.runs, matchState.wickets, matchState.currentBall) {
+        matchViewModel.updateLiveInnings(matchState, matchViewModel.battingTeam)
     }
 
-    /* ----------------------------------------------------------------
-       Dialog state holders
-    ------------------------------------------------------------------*/
+
     var showEndInningsDialog  by remember { mutableStateOf(false) }
     var showMatchResultDialog by remember { mutableStateOf(false) }
     var winningMessage        by remember { mutableStateOf("") }
 
-    /* -- wicket / run‑out dialog toggles -- */
+
     var wicketTypeDialog  by remember { mutableStateOf(false) }
     var runOutDialog      by remember { mutableStateOf(false) }
     var newBatsmanDialog  by remember { mutableStateOf(false) }
     var newBatsmanCallback by remember { mutableStateOf<(String) -> Unit>({}) }
 
-    /* ----------------------------------------------------------------
-       End‑innings & match‑result checks
-    ------------------------------------------------------------------*/
+
     val target        = matchViewModel.targetScore
     val isSecondInnings = matchViewModel.phase == MatchPhase.SECOND
     val ballsLeft       = (totalOvers * 6) -
@@ -105,12 +121,10 @@ fun ScoringScreen(
         }
     }
 
-    /* ----------------------------------------------------------------
-       UI
-    ------------------------------------------------------------------*/
+
     Box(Modifier.fillMaxSize()) {
 
-        /* Background image */
+
         Image(
             painter = painterResource(R.drawable.playing_cricket),
             contentDescription = null,
@@ -125,10 +139,11 @@ fun ScoringScreen(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(Modifier.height(25.dp))
             Text("Live Scoreboard", fontWeight = FontWeight.Bold, fontSize = 18.sp)
             Spacer(Modifier.height(16.dp))
 
-            /* Score summary card – tap to go to summary */
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -191,7 +206,7 @@ fun ScoringScreen(
                 }
             }
 
-            /* --- Input buttons (3×3 grid) --- */
+
             Spacer(Modifier.height(16.dp))
             val rows = listOf(
                 listOf("Dot", "1", "2"),
@@ -216,7 +231,7 @@ fun ScoringScreen(
                 }
             }
 
-            /* --- Undo & Scorecard buttons --- */
+
             Spacer(Modifier.height(16.dp))
             Row(Modifier.fillMaxWidth(), Arrangement.SpaceEvenly) {
                 Button(
@@ -246,9 +261,7 @@ fun ScoringScreen(
             Spacer(Modifier.height(32.dp))
         }
 
-        /* ----------------------------------------------------------------
-           Dialogs (unchanged)
-        ------------------------------------------------------------------*/
+
         if (wicketTypeDialog) {
             WicketDialog(
                 onDismiss = { wicketTypeDialog = false },
@@ -262,12 +275,15 @@ fun ScoringScreen(
 
         if (runOutDialog) {
             RunOutDialog(
+                strikerName = matchState.strikerName,
+                nonStrikerName = matchState.nonStrikerName,
                 onDismiss = { runOutDialog = false },
                 onRunOutConfirmed = { run, out, newName, strikerNow ->
                     runOutDialog = false
                     matchState.handleRunOut(run, out, newName, strikerNow)
                 }
             )
+
         }
 
         if (newBatsmanDialog) {

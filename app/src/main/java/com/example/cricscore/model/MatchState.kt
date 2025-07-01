@@ -1,20 +1,13 @@
 package com.example.cricscore.model
 
-
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import com.example.cricscore.model.data.PlayerStats
-
 
 class MatchState(
     val totalOvers: Int,
     striker: String,
     nonStriker: String
 ) {
-    val outPlayers = mutableSetOf<String>()
     var runs by mutableIntStateOf(0)
     var wickets by mutableIntStateOf(0)
     var currentOver by mutableIntStateOf(0)
@@ -33,6 +26,13 @@ class MatchState(
     var perBallResults = mutableStateListOf<String>()
     var overBallHistory = mutableStateListOf<List<String>>()
 
+    var isExpectingNbRuns = false
+    var isExpectingFreeHit = false
+
+
+
+    private val playerStats = mutableStateListOf<PlayerStats>()
+
     data class Snapshot(
         val runs: Int,
         val wickets: Int,
@@ -41,10 +41,12 @@ class MatchState(
         val striker: Triple<String, Int, Int>,
         val nonStriker: Triple<String, Int, Int>,
         val isStrikerOnStrike: Boolean,
-        val overState: List<String>
+        val overState: List<String>,
+        val playerStats: List<PlayerStats>
     )
 
-    val history = mutableStateListOf<Snapshot>()
+    private val history = mutableStateListOf<Snapshot>()
+
 
     fun saveSnapshot() {
         history.add(
@@ -53,11 +55,11 @@ class MatchState(
                 Triple(strikerName, strikerRuns, strikerBalls),
                 Triple(nonStrikerName, nonStrikerRuns, nonStrikerBalls),
                 isStrikerOnStrike,
-                perBallResults.toList()
+                perBallResults.toList(),
+                playerStats.map { it.copy() }
             )
         )
     }
-
 
     fun undo() {
         if (history.isNotEmpty()) {
@@ -75,6 +77,9 @@ class MatchState(
             isStrikerOnStrike = last.isStrikerOnStrike
             perBallResults.clear()
             perBallResults.addAll(last.overState)
+
+            playerStats.clear()
+            playerStats.addAll(last.playerStats)
         }
     }
 
@@ -98,11 +103,11 @@ class MatchState(
     ) {
         saveSnapshot()
         wickets++
-        perBallResults.add(outType)
+        perBallResults.add("W")
 
         if (isStrikerOnStrike) {
             strikerBalls++
-            outPlayers.add(strikerName)  // ✅ Track who got out
+            updatePlayerStats(strikerName, strikerRuns, strikerBalls, true,outType)
             askNewBatsman { name ->
                 strikerName = name
                 strikerRuns = 0
@@ -111,7 +116,7 @@ class MatchState(
             }
         } else {
             nonStrikerBalls++
-            outPlayers.add(nonStrikerName)  // ✅ Track who got out
+            updatePlayerStats(nonStrikerName, nonStrikerRuns, nonStrikerBalls, true,outType)
             askNewBatsman { name ->
                 nonStrikerName = name
                 nonStrikerRuns = 0
@@ -123,24 +128,23 @@ class MatchState(
         incrementBall()
     }
 
-
     fun handleRunOut(run: Int, outName: String, newName: String, strikerNow: Boolean) {
         saveSnapshot()
         wickets++
         runs += run
-        perBallResults.add("Run Out")
-
-        outPlayers.add(outName)
+        perBallResults.add("W")
 
         if (outName == strikerName) {
             strikerRuns += run
             strikerBalls++
+            updatePlayerStats(strikerName, strikerRuns, strikerBalls, true, outType = "Run Out")
             strikerName = newName
             strikerRuns = 0
             strikerBalls = 0
         } else {
             nonStrikerRuns += run
             nonStrikerBalls++
+            updatePlayerStats(nonStrikerName, nonStrikerRuns, nonStrikerBalls, true,outType = "Run Out")
             nonStrikerName = newName
             nonStrikerRuns = 0
             nonStrikerBalls = 0
@@ -150,48 +154,52 @@ class MatchState(
         incrementBall()
     }
 
-
-
-    fun getBattingStats(): List<PlayerStats> {
-        return listOf(
-            PlayerStats(
-                name = strikerName,
-                runs = strikerRuns,
-                balls = strikerBalls,
-                isOut = strikerName in outPlayers
-            ),
-            PlayerStats(
-                name = nonStrikerName,
-                runs = nonStrikerRuns,
-                balls = nonStrikerBalls,
-                isOut = nonStrikerName in outPlayers
-            )
-        )
-    }
-
-    fun getOverWiseResults(): List<OverBreakdown> {
-        val allOvers = overBallHistory.toMutableList()
-        if (perBallResults.isNotEmpty()) {
-            allOvers.add(perBallResults.toList())
-        }
-        return allOvers.mapIndexed { index, balls ->
-            val runs = balls.sumOf { it.toIntOrNull() ?: if (it == "4") 4 else if (it == "6") 6 else 0 }
-            val wkts = balls.count { it in listOf("W", "Run Out", "Bowled", "Catch Out", "LBW", "Hit Wicket") }
-            OverBreakdown(index + 1, runs, wkts, balls)
-        }
-    }
-
     fun handleRun(label: String) {
         saveSnapshot()
-        when (label) {
-            "Wide" -> {
+
+        when {
+            label == "No Ball" -> {
+                runs++
+                perBallResults.add("Nb")
+                isExpectingNbRuns = true  // Await user input for runs scored on no-ball
+            }
+
+            isExpectingNbRuns -> {
+                val run = label.toIntOrNull() ?: 0
+                runs += run
+                if (isStrikerOnStrike) {
+                    strikerRuns += run
+
+                } else {
+                    nonStrikerRuns += run
+
+                }
+                perBallResults.add("$run(nb)")
+                isExpectingNbRuns = false
+                isExpectingFreeHit = true  // Now expect Free Hit ball next
+            }
+
+            isExpectingFreeHit -> {
+                val run = label.toIntOrNull() ?: 0
+                runs += run
+                if (isStrikerOnStrike) {
+                    strikerRuns += run
+                    strikerBalls++
+                } else {
+                    nonStrikerRuns += run
+                    nonStrikerBalls++
+                }
+                perBallResults.add("$run(fh)")
+                if (run % 2 != 0) isStrikerOnStrike = !isStrikerOnStrike
+                isExpectingFreeHit = false
+                incrementBall()
+            }
+
+            label == "Wide" -> {
                 runs++
                 perBallResults.add("Wd")
             }
-            "No Ball" -> {
-                runs++
-                perBallResults.add("Nb")
-            }
+
             else -> {
                 val run = label.toIntOrNull() ?: 0
                 runs += run
@@ -208,13 +216,42 @@ class MatchState(
             }
         }
     }
+
+
+    private fun updatePlayerStats(name: String, runs: Int, balls: Int, isOut: Boolean, outType: String) {
+        val existing = playerStats.indexOfFirst { it.name == name }
+        if (existing >= 0) {
+            playerStats[existing] = PlayerStats(name, runs, balls, isOut, outType)
+        } else {
+            playerStats.add(PlayerStats(name, runs, balls, isOut,outType))
+        }
+    }
+
+    fun getBattingStats(): List<PlayerStats> {
+
+        updatePlayerStats(strikerName, strikerRuns, strikerBalls, false, outType = "")
+        updatePlayerStats(nonStrikerName, nonStrikerRuns, nonStrikerBalls, false, outType = "")
+        return playerStats.toList()
+    }
+
+    fun getOverWiseResults(): List<OverBreakdown> {
+        val allOvers = overBallHistory.toMutableList()
+        if (perBallResults.isNotEmpty()) {
+            allOvers.add(perBallResults.toList())
+        }
+        return allOvers.mapIndexed { index, balls ->
+            val runs = balls.sumOf { it.toIntOrNull() ?: if (it == "4") 4 else if (it == "6") 6 else 0 }
+            val wkts = balls.count { it in listOf("W", "Run Out", "Bowled", "Catch Out", "LBW", "Hit Wicket") }
+            OverBreakdown(index + 1, runs, wkts, balls)
+        }
+    }
+
     fun resetForNextInnings() {
         runs = 0
         wickets = 0
         currentOver = 0
         currentBall = 0
 
-        // Assume striker/non-striker names will be entered manually
         strikerRuns = 0
         strikerBalls = 0
         nonStrikerRuns = 0
@@ -225,8 +262,6 @@ class MatchState(
         perBallResults.clear()
         overBallHistory.clear()
         history.clear()
-        outPlayers.clear()
+        playerStats.clear()
     }
-
 }
-
