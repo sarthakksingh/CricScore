@@ -6,7 +6,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.navigation.compose.rememberNavController
 import com.example.cricscore.navigation.AppNavHost
-//import com.example.cricscore.navigation.NavGraph
 import com.example.cricscore.ui.theme.CricScoreTheme
 
 class MainActivity : ComponentActivity() {

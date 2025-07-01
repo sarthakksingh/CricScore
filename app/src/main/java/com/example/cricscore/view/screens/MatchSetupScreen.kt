@@ -90,7 +90,11 @@ fun MatchSetupScreen(
                     onValueChange = { overs = it },
                     label = { Text("Enter Number of Overs") },
                     modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.Black
+                )
                 )
             }
 
@@ -110,14 +114,22 @@ fun MatchSetupScreen(
                     value = team1,
                     onValueChange = { team1 = it },
                     label = { Text("Team A") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black
+                    )
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = team2,
                     onValueChange = { team2 = it },
                     label = { Text("Team B") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black
+                    )
                 )
             }
 
@@ -189,14 +201,22 @@ fun MatchSetupScreen(
                     value = striker,
                     onValueChange = { striker = it },
                     label = { Text("Striker") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black
+                    )
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = nonStriker,
                     onValueChange = { nonStriker = it },
                     label = { Text("Non-Striker") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black
+                    )
                 )
             }
 
@@ -208,14 +228,20 @@ fun MatchSetupScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 8.dp, start = 4.dp, bottom = 4.dp)
+
                 )
 
                 OutlinedTextField(
                     value = numPlayers,
                     onValueChange = { numPlayers = it },
-                    label = { Text("Total Players per Team") },
+                    label = { Text("Total Players per Team")},
                     modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black
+                    )
+
                 )
             }
 
@@ -223,7 +249,7 @@ fun MatchSetupScreen(
 
             Button(
                 onClick = {
-                    /* ---------- 1.  Basic validation / fall‑backs ---------- */
+
                     val inputOvers       = overs.toIntOrNull()?.coerceAtLeast(1) ?: 1
                     val inputTeamA       = team1.ifBlank { "Team A" }
                     val inputTeamB       = team2.ifBlank { "Team B" }
@@ -232,20 +258,20 @@ fun MatchSetupScreen(
                     val inputNonStriker  = nonStriker.ifBlank{ "Non‑Striker" }
                     val inputPlayers     = numPlayers.toIntOrNull()?.coerceIn(2, 15) ?: 11
 
-                    /* ---------- 2.  Push into the ViewModel ---------- */
+
                     matchViewModel.apply {
                         totalOvers        = inputOvers
                         numPlayersPerTeam = inputPlayers
                         teamAName         = inputTeamA
                         teamBName         = inputTeamB
-                        battingTeam       = inputBattingTeam        // “Team A” or “Team B”
+                        battingTeam       = inputBattingTeam
                         strikerName       = inputStriker
                         nonStrikerName    = inputNonStriker
                         phase             = MatchPhase.FIRST
-                        targetScore       = 0                       // reset
+                        targetScore       = 0
                     }
 
-                    /* ---------- 3.  Navigate to scoring ---------- */
+
                     navController.navigate("scoring")
                 },
                 colors   = ButtonDefaults.buttonColors(containerColor = Color(0xFF00472F)),
@@ -288,14 +314,6 @@ fun TransparentPanel(content: @Composable ColumnScope.() -> Unit) {
 
 
 
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun MatchSetupScreenPreview() {
-    MaterialTheme {
-        MatchSetupScreen(
-            navController = TODO()
-        )
-    }
-}
+
 
 
