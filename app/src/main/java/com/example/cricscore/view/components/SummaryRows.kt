@@ -20,15 +20,24 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.cricscore.model.OverBreakdown
 import com.example.cricscore.model.data.PlayerStats
 
 @Composable
- fun PlayerRow(p: PlayerStats) {
+fun PlayerRow(p: PlayerStats) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
-    ) { Text(p.name); Text("${p.runs} (${p.balls})") }
+    ) {
+        Column {
+            Text(p.name, fontWeight = FontWeight.SemiBold)
+            if (p.isOut) {
+                Text(p.outType, fontSize = 12.sp, color = Color.Red)
+            } else {
+                Text("not out", fontSize = 12.sp, color = Color.Gray)
+            }
+        }
+        Text("${p.runs} (${p.balls})")
+    }
 }
 
 @Composable

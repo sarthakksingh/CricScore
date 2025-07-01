@@ -13,7 +13,7 @@ enum class MatchPhase { FIRST, SECOND, COMPLETE }
 
 class MatchViewModel : ViewModel() {
 
-    // --- Setup‑screen inputs ---
+
     var totalOvers by mutableIntStateOf(0)
     var numPlayersPerTeam by mutableIntStateOf(11)
     var teamAName by mutableStateOf("Team A")
@@ -22,24 +22,35 @@ class MatchViewModel : ViewModel() {
     var nonStrikerName by mutableStateOf("")
 
 
-    // Match phase (controls innings progression)
+
     var phase by mutableStateOf(MatchPhase.FIRST)
 
-    // Target to chase in 2nd innings
+
     var targetScore by mutableIntStateOf(0)
 
-    // Who is currently batting (Team A or B)
+
     var battingTeam by mutableStateOf("Team A")
 
-    // Summaries for each innings
+
     var inningsA by mutableStateOf<InningsSummary?>(null)
     var inningsB by mutableStateOf<InningsSummary?>(null)
 
-    // Currently selected match from history (if viewing)
+
     var selectedMatch by mutableStateOf<MatchRecord?>(null)
 
-    // In-memory history (can be moved to Room later)
+
     val matchList = mutableStateListOf<MatchRecord>()
+    var matchState: MatchState? = null
+
+    fun initMatchState(overs: Int, striker: String, nonStriker: String) {
+        if (matchState == null) {
+            matchState = MatchState(overs, striker, nonStriker)
+        }
+    }
+
+    fun resetMatchState() {
+        matchState = null
+    }
 
     fun resetMatch() {
         phase = MatchPhase.FIRST
@@ -49,7 +60,7 @@ class MatchViewModel : ViewModel() {
         inningsB = null
     }
 
-    // Called from ScoringScreen to update the live inning
+
     @SuppressLint("DefaultLocale")
     fun updateLiveInnings(matchState: MatchState, teamName: String) {
         val overs = "${matchState.currentOver}.${matchState.currentBall}"
