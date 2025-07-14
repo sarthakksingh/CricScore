@@ -74,6 +74,7 @@ fun ScoringScreen(
     }
 
 
+
     var showEndInningsDialog  by remember { mutableStateOf(false) }
     var showMatchResultDialog by remember { mutableStateOf(false) }
     var winningMessage        by remember { mutableStateOf("") }
@@ -85,6 +86,7 @@ fun ScoringScreen(
     var newBatsmanCallback by remember { mutableStateOf<(String) -> Unit>({}) }
 
 
+
     val target        = matchViewModel.targetScore
     val isSecondInnings = matchViewModel.phase == MatchPhase.SECOND
     val ballsLeft       = (totalOvers * 6) -
@@ -92,10 +94,12 @@ fun ScoringScreen(
     val runsLeft        = target - matchState.runs
 
     LaunchedEffect(matchState.currentOver, matchState.wickets) {
-        val inningsOver = matchState.currentOver == totalOvers || matchState.wickets >= 10
+        val inningsOver = matchState.currentOver == totalOvers || matchState.wickets == matchViewModel.numPlayersPerTeam - 1
+
         if (inningsOver && matchViewModel.phase != MatchPhase.COMPLETE) {
             showEndInningsDialog = true
         }
+
 
         if (isSecondInnings) {
             when {
