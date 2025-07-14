@@ -31,7 +31,7 @@ class MatchState(
 
 
 
-    private val playerStats = mutableStateListOf<PlayerStats>()
+    val playerStats = mutableStateListOf<PlayerStats>()
 
     data class Snapshot(
         val runs: Int,
@@ -228,9 +228,12 @@ class MatchState(
     }
 
     fun getBattingStats(): List<PlayerStats> {
-
-        updatePlayerStats(strikerName, strikerRuns, strikerBalls, false, outType = "")
-        updatePlayerStats(nonStrikerName, nonStrikerRuns, nonStrikerBalls, false, outType = "")
+        if (!playerStats.any { it.name == strikerName && it.isOut }) {
+            updatePlayerStats(strikerName, strikerRuns, strikerBalls, false, "")
+        }
+        if (!playerStats.any { it.name == nonStrikerName && it.isOut }) {
+            updatePlayerStats(nonStrikerName, nonStrikerRuns, nonStrikerBalls, false, "")
+        }
         return playerStats.toList()
     }
 
