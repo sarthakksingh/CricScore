@@ -1,4 +1,4 @@
-package com.example.cricscore.model.data
+package com.example.cricscore.data
 
 data class PlayerStats(
     val name: String,
