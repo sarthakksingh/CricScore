@@ -1,6 +1,6 @@
 package com.example.cricscore.model
 
-import com.example.cricscore.model.data.PlayerStats
+import com.example.cricscore.data.PlayerStats
 
 
 data class OverBreakdown(val overNumber: Int, val runs: Int, val wickets: Int, val perBall: List<String>)
@@ -19,7 +19,7 @@ data class InningsSummary(
 
 
 data class MatchRecord(
-    val id: Long,
+    val id: Int,
     val date: String,
     //   val venue: String,
     val inningsA: InningsSummary,

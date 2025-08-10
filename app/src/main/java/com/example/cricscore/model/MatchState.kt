@@ -1,7 +1,8 @@
 package com.example.cricscore.model
 
 import androidx.compose.runtime.*
-import com.example.cricscore.model.data.PlayerStats
+import com.example.cricscore.data.PlayerStats
+import com.example.cricscore.room.PlayerStatsEntity
 
 class MatchState(
     val totalOvers: Int,
@@ -32,6 +33,9 @@ class MatchState(
 
 
     val playerStats = mutableStateListOf<PlayerStats>()
+
+
+
 
     data class Snapshot(
         val runs: Int,
@@ -236,6 +240,22 @@ class MatchState(
         }
         return playerStats.toList()
     }
+
+    fun restoreBattingStats(stats: List<PlayerStatsEntity>) {
+        playerStats.clear()
+        stats.forEach { player ->
+            playerStats.add(
+                PlayerStats(
+                    name = player.name,
+                    runs = player.runs,
+                    balls = player.balls,
+                    isOut = player.isOut,
+                    outType = player.outType
+                )
+            )
+        }
+    }
+
 
     fun getOverWiseResults(): List<OverBreakdown> {
         val allOvers = overBallHistory.toMutableList()

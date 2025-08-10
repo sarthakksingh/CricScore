@@ -1,46 +1,47 @@
 package com.example.cricscore.viewModel
 
-import android.annotation.SuppressLint
-import androidx.compose.runtime.*
-import androidx.lifecycle.ViewModel
-import com.example.cricscore.model.InningsSummary
-import com.example.cricscore.model.MatchRecord
+import android.app.Application
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
 import com.example.cricscore.model.MatchState
-import java.text.SimpleDateFormat
-import java.util.*
+import com.example.cricscore.room.CricketDatabase
+import com.example.cricscore.room.InningsEntity
+import com.example.cricscore.room.MatchEntity
+import com.example.cricscore.room.PlayerStatsEntity
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 enum class MatchPhase { FIRST, SECOND, COMPLETE }
 
-class MatchViewModel : ViewModel() {
+class MatchViewModel(application: Application) : AndroidViewModel(application) {
 
+    private val dao = CricketDatabase.getDatabase(application).matchDao()
 
-    var totalOvers by mutableIntStateOf(0)
-    var numPlayersPerTeam by mutableIntStateOf(11)
-    var teamAName by mutableStateOf("Team A")
-    var teamBName by mutableStateOf("Team B")
-    var strikerName by mutableStateOf("")
-    var nonStrikerName by mutableStateOf("")
-
-
-
-    var phase by mutableStateOf(MatchPhase.FIRST)
-
-
-    var targetScore by mutableIntStateOf(0)
-
-
-    var battingTeam by mutableStateOf("Team A")
-
-
-    var inningsA by mutableStateOf<InningsSummary?>(null)
-    var inningsB by mutableStateOf<InningsSummary?>(null)
-
-
-    var selectedMatch by mutableStateOf<MatchRecord?>(null)
-
-
-    val matchList = mutableStateListOf<MatchRecord>()
     var matchState: MatchState? = null
+        private set
+
+    var phase: MatchPhase = MatchPhase.FIRST
+    var totalOvers: Int = 0
+    var strikerName: String = ""
+    var nonStrikerName: String = ""
+    var battingTeam: String = "Team A"
+    var targetScore: Int = 0
+    var numPlayersPerTeam by mutableIntStateOf(11)
+
+    private val _matchHistory = MutableLiveData<List<MatchEntity>>()
+    val matchHistory: LiveData<List<MatchEntity>> get() = _matchHistory
+
+
+    private val _matchDetails = MutableLiveData<MatchEntity?>()
+    val matchDetails: LiveData<MatchEntity?> get() = _matchDetails
+
+    private val _ongoingMatch = MutableLiveData<Pair<String, MatchState>?>()
+    val ongoingMatch: LiveData<Pair<String, MatchState>?> get() = _ongoingMatch
 
     fun initMatchState(overs: Int, striker: String, nonStriker: String) {
         if (matchState == null) {
@@ -48,66 +49,132 @@ class MatchViewModel : ViewModel() {
         }
     }
 
-    fun resetMatchState() {
-        matchState = null
-    }
+    fun updateLiveInnings(matchState: MatchState, battingTeam: String) {
+        this.matchState = matchState
+        this.battingTeam = battingTeam
 
-    fun resetMatch() {
-        phase = MatchPhase.FIRST
-        targetScore = 0
-        battingTeam = "Team A"
-        inningsA = null
-        inningsB = null
-    }
+        viewModelScope.launch(Dispatchers.IO) {
+
+            dao.deleteOngoingInningsForTeam(battingTeam)
 
 
-    @SuppressLint("DefaultLocale")
-    fun updateLiveInnings(matchState: MatchState, teamName: String) {
-        val overs = "${matchState.currentOver}.${matchState.currentBall}"
-        val rr = if (matchState.currentOver + matchState.currentBall / 6.0 > 0)
-            String.format("%.2f", matchState.runs / (matchState.currentOver + matchState.currentBall / 6.0))
-        else "0.00"
+            val inningsId = dao.insertInnings(
+                InningsEntity(
+                    matchId = -1L,
+                    battingTeam = battingTeam,
+                    runs = matchState.runs,
+                    wickets = matchState.wickets,
+                    overs = matchState.currentOver,
+                    totalOvers = totalOvers,
+                    balls = matchState.currentBall,
+                    target = if (phase == MatchPhase.SECOND) targetScore else null
+                )
+            )
 
-        val summary = InningsSummary(
-            teamName = teamName,
-            totalRuns = matchState.runs,
-            totalWkts = matchState.wickets,
-            oversBowled = overs,
-            runRate = rr,
-            players = matchState.getBattingStats(),
-            overs = matchState.getOverWiseResults().map { it.perBall },
-            completed = true
-        )
-
-        when (phase) {
-            MatchPhase.FIRST -> inningsA = summary
-            MatchPhase.SECOND -> inningsB = summary
-            else -> {}
+            dao.deleteOngoingPlayersForInnings(inningsId)
+            matchState.getBattingStats().forEach { player ->
+                dao.insertPlayerStat(
+                    PlayerStatsEntity(
+                        inningsId = inningsId,
+                        name = player.name,
+                        runs = player.runs,
+                        balls = player.balls,
+                        isOut = player.isOut,
+                        outType = player.outType
+                    )
+                )
+            }
         }
     }
 
-    fun addMatchToHistory() {
-        if (inningsA != null && inningsB != null) {
-            val id = System.currentTimeMillis()
-            val date = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Date())
-            val match = MatchRecord(id, date, inningsA!!, inningsB!!)
-            matchList.add(match)
+
+    fun saveMatchToDb(
+        teamA: String,
+        teamB: String,
+        winner: String?,
+        inningsList: List<Pair<String, MatchState>>
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val matchId = dao.insertMatch(
+                MatchEntity(
+                    teamA = teamA,
+                    teamB = teamB,
+                    totalOvers = totalOvers,
+                    date = System.currentTimeMillis(),
+                    winner = winner
+                )
+            )
+
+            inningsList.forEach { (battingTeam, state) ->
+                val inningsId = dao.insertInnings(
+                    InningsEntity(
+                        matchId = matchId,
+                        battingTeam = battingTeam,
+                        runs = state.runs,
+                        wickets = state.wickets,
+                        overs = state.currentOver,
+                        totalOvers = totalOvers,
+                        balls = state.currentBall,
+                        target = if (phase == MatchPhase.SECOND) targetScore else null
+                    )
+                )
+
+                state.getBattingStats().forEach { player ->
+                    dao.insertPlayerStat(
+                        PlayerStatsEntity(
+                            inningsId = inningsId,
+                            name = player.name,
+                            runs = player.runs,
+                            balls = player.balls,
+                            isOut = player.isOut,
+                            outType = player.outType
+                        )
+                    )
+                }
+            }
+
+
+            dao.clearOngoingInnings()
         }
     }
 
-    fun selectMatch(match: MatchRecord) {
-        selectedMatch = match
+    fun loadMatchHistory() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val matches = dao.getAllMatches()
+            _matchHistory.postValue(matches)
+        }
     }
 
-    fun clearSelectedMatch() {
-        selectedMatch = null
+    fun loadMatchDetails(matchId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val match = dao.getMatchById(matchId)
+            _matchDetails.postValue(match)
+        }
     }
 
-    fun removeMatch(match: MatchRecord) {
-        matchList.remove(match)
-    }
 
-    fun clearAllMatches() {
-        matchList.clear()
+    fun loadOngoingMatch() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val innings = dao.getOngoingInnings()
+            if (innings != null) {
+                totalOvers = innings.totalOvers
+                targetScore = innings.target ?: 0
+                val stats = dao.getPlayerStatsForInnings(innings.inningsId)
+                val resumedState = MatchState(
+                    innings.totalOvers,
+                    stats.firstOrNull()?.name ?: "",
+                    stats.getOrNull(1)?.name ?: ""
+                ).apply {
+                    runs = innings.runs
+                    wickets = innings.wickets
+                    currentOver = innings.overs
+                    currentBall = innings.balls
+                    restoreBattingStats(stats)
+                }
+                _ongoingMatch.postValue(innings.battingTeam to resumedState)
+            } else {
+                _ongoingMatch.postValue(null)
+            }
+        }
     }
 }
